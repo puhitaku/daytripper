@@ -2,12 +2,12 @@ package main
 
 import "testing"
 
-var d *dealer
+var d *dealerServer
 var t *tripper
 
 func Benchmark(b *testing.B) {
-	d = newDealer(1)
-	t = newTripper(d, 0)
+	d = newDealerServer()
+	t = newTripper(d)
 
 	b.Run("BenchmarkTripper_GoOne", benchmarkGoOne)
 }
