@@ -87,10 +87,23 @@ func newTripper(d *dealer, i int) *tripper {
 }
 
 func (t *tripper) Go(prefix string) error {
+	if len(prefix) < 5 {
+		return fmt.Errorf("too short")
+	}
+
+	prefixp := prefix
+	if len(prefix)%4 != 0 {
+		prefixp += strings.Repeat(prefix[len(prefix)-1:], 4-len(prefix)%4)
+	}
+	expect, err := base64.StdEncoding.DecodeString(prefixp)
+	if err != nil {
+		return fmt.Errorf("failed to decode prefix: %s", err)
+	}
+	expect = expect[:len(expect)-3]  // the last 18 bits (3 bytes) can have different byte than we expect
+
 	var bufi []byte
 	var bufo []byte = make([]byte, charsLen*2)
 	prefixb := []byte(prefix)
-	lp := len(prefix)
 
 	for i := 0; ; i++ {
 		bufi = t.d.NextBlock(t.i)
@@ -105,9 +118,11 @@ func (t *tripper) Go(prefix string) error {
 
 						t.h.Reset()
 						t.h.Write(bufi)
-						base64.StdEncoding.Encode(bufo, t.h.Sum(nil)[:lp])
-						if bytes.HasPrefix(bufo, prefixb) {
-							fmt.Printf("\rFOUND!!!: #%s -> %s\n", string(bufi), strings.TrimRight(string(bufo), "\x00"))
+						if bytes.HasPrefix(t.h.Sum(nil), expect) {
+							base64.StdEncoding.Encode(bufo, t.h.Sum(nil))
+							if bytes.HasPrefix(bufo, prefixb) {
+								fmt.Printf("\rFOUND!!!: #%s -> %s\n", string(bufi), strings.TrimRight(string(t.h.Sum(nil)), "\x00"))
+							}
 						}
 
 						t.Count++
@@ -119,11 +134,24 @@ func (t *tripper) Go(prefix string) error {
 }
 
 func (t *tripper) GoOne(prefix string) error {
-	var bufo = make([]byte, charsLen*2)
-	prefixb := []byte(prefix)
-	lp := len(prefix)
+	if len(prefix) < 5 {
+		return fmt.Errorf("too short")
+	}
+
+	prefixp := prefix
+	if len(prefix)%4 != 0 {
+		prefixp += strings.Repeat("=", len(prefix)%4)
+	}
+	expect, err := base64.StdEncoding.DecodeString(prefixp)
+	if err != nil {
+		return fmt.Errorf("failed to decode prefix: %s", err)
+	}
+	expect = expect[:len(expect)-1]  // the last byte can have different byte than we expect
 
 	bufi := t.d.NextBlock(t.i)
+	var bufo []byte = make([]byte, charsLen*2)
+	prefixb := []byte(prefix)
+
 	for j1 := 0; j1 < charsLen; j1++ {
 		bufi[0] = chars[j1]
 		for j2 := 0; j2 < charsLen; j2++ {
@@ -135,9 +163,11 @@ func (t *tripper) GoOne(prefix string) error {
 
 					t.h.Reset()
 					t.h.Write(bufi)
-					base64.StdEncoding.Encode(bufo, t.h.Sum(nil)[:lp])
-					if bytes.HasPrefix(bufo, prefixb) {
-						fmt.Printf("\rFOUND!!!: #%s -> %s\n", string(bufi), strings.TrimRight(string(bufo), "\x00"))
+					if bytes.HasPrefix(t.h.Sum(nil), expect) {
+						base64.StdEncoding.Encode(bufo, t.h.Sum(nil))
+						if bytes.HasPrefix(bufo, prefixb) {
+							fmt.Printf("\rFOUND!!!: #%s -> %s\n", string(bufi), strings.TrimRight(string(t.h.Sum(nil)), "\x00"))
+						}
 					}
 
 					t.Count++
