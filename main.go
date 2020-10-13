@@ -149,7 +149,7 @@ func (t *tripper) GoOne(prefix string) error {
 }
 
 func main() {
-	n := flag.Int("nr", runtime.NumCPU(), "Number of goroutines (default: runtime.NumCPU())")
+	n := flag.Int("nr", runtime.NumCPU()*2, "Number of goroutines (default: runtime.NumCPU() * 2)")
 	flag.Parse()
 	if flag.NArg() != 1 {
 		fmt.Println("Invalid number of args!")
