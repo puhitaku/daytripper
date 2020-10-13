@@ -25,15 +25,17 @@ Server
 $ go build
 
 $ ./daytripper -help
-Usage of ./daytripper:
-  -nr int
-        Number of goroutines (default: runtime.NumCPU() * 2) (default 16)
-  -remote string
+Usage: ./daytripper [-nr N] [-remote HOST] TRIP
+  TRIP
+        The trip substring to find
+  -nr N (int)
+        Number of goroutines (default: runtime.NumCPU() * 2)
+  -remote HOST (string)
         Remote daytripper host (optional for distributed calculation)
 
 $ ./daytripper triptofind
 Searching for 'triptofind' with 16 goroutines...
-Deader is serving at 0.0.0.0:52313
+Dealer is serving at 0.0.0.0:52313
 Hashes: 16687736729 (16150194 hash/s) | Elapsed 1068 sec
 ```
 

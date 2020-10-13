@@ -57,7 +57,7 @@ func (d *dealerServer) Run() {
 			panic(err)
 		}
 	}()
-	fmt.Println("Deader is serving at 0.0.0.0:52313")
+	fmt.Println("Dealer is serving at 0.0.0.0:52313")
 }
 
 func (d *dealerServer) NextBlock() []byte {

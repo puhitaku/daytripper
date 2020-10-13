@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"runtime"
 	"time"
 
@@ -17,7 +18,9 @@ const (
 var chars []byte = []byte("0123456789abcdefghijklmnopqrstuvwxyz!@#$%^&*()_+|[];',./{}:\"<>?`~")
 
 func main() {
-	n := flag.Int("nr", runtime.NumCPU()*2, "Number of goroutines (default: runtime.NumCPU() * 2)")
+	flag.Usage = usage
+
+	nr := flag.Int("nr", runtime.NumCPU() * 2, "Number of goroutines (default: runtime.NumCPU() * 2)")
 	remote := flag.String("remote", "", "Remote daytripper host (optional for distributed calculation)")
 
 	flag.Parse()
@@ -28,7 +31,7 @@ func main() {
 	}
 
 	prefix := flag.Arg(0)
-	fmt.Printf("Searching for '%s' with %d goroutines...\n", prefix, *n)
+	fmt.Printf("Searching for '%s' with %d goroutines...\n", prefix, *nr)
 
 	var d dealer
 
@@ -40,10 +43,10 @@ func main() {
 
 	d.Run()
 
-	ts := make([]*tripper, *n)
+	ts := make([]*tripper, *nr)
 	eg := errgroup.Group{}
 
-	for i := 0; i < *n; i++ {
+	for i := 0; i < *nr; i++ {
 		j := i
 		ts[j] = newTripper(d)
 		eg.Go(func() error {
@@ -59,7 +62,7 @@ func main() {
 		for {
 			lastCount = count
 			count = 0
-			for i := 0; i < *n; i++ {
+			for i := 0; i < *nr; i++ {
 				count += ts[i].Count
 			}
 			fmt.Printf("Hashes: %d (%d hash/s) | Elapsed %d sec", count, count-lastCount, time.Now().Sub(start) / time.Second)
@@ -72,5 +75,19 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+var usageStr = `
+Usage: %s [-nr N] [-remote HOST] TRIP
+  TRIP
+        The trip substring to find
+  -nr N (int)
+        Number of goroutines (default: runtime.NumCPU() * 2)
+  -remote HOST (string)
+        Remote daytripper host (optional for distributed calculation)
+`
+
+func usage() {
+	fmt.Printf(usageStr[1:], os.Args[0])
 }
 
