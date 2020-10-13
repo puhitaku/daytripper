@@ -91,19 +91,26 @@ func (t *tripper) Go(prefix string) error {
 
 	for i := 0; ; i++ {
 		bufi = t.d.NextBlock(t.i)
-		for j := 0; j < int(blockSize); j++ {
-			bufi[0] = chars[j % charsLen]
-			bufi[1] = chars[(j / charsLen) % charsLen]
-			bufi[2] = chars[(j / charsLen / charsLen) % charsLen]
-			bufi[3] = chars[(j / charsLen / charsLen / charsLen) % charsLen]
-			t.h.Reset()
-			t.h.Write(bufi)
-			base64.StdEncoding.Encode(bufo, t.h.Sum(nil))
-			if strings.HasPrefix(string(bufo), prefix) {
-				fmt.Printf("\rFOUND!!!: #%s -> %s\n", string(bufi), strings.TrimRight(string(bufo), "\x00"))
-			}
+		for j1 := 0; j1 < charsLen; j1++ {
+			bufi[0] = chars[j1]
+			for j2 := 0; j2 < charsLen; j2++ {
+				bufi[1] = chars[j2]
+				for j3 := 0; j3 < charsLen; j3++ {
+					bufi[2] = chars[j3]
+					for j4 := 0; j4 < charsLen; j4++ {
+						bufi[3] = chars[j4]
 
-			t.Count++
+						t.h.Reset()
+						t.h.Write(bufi)
+						base64.StdEncoding.Encode(bufo, t.h.Sum(nil))
+						if strings.HasPrefix(string(bufo), prefix) {
+							fmt.Printf("\rFOUND!!!: #%s -> %s\n", string(bufi), strings.TrimRight(string(bufo), "\x00"))
+						}
+
+						t.Count++
+					}
+				}
+			}
 		}
 	}
 }
@@ -112,20 +119,26 @@ func (t *tripper) GoOne(prefix string) error {
 	var bufo = make([]byte, charsLen*2)
 
 	bufi := t.d.NextBlock(t.i)
-	for j := 0; j < int(blockSize); j++ {
-		bufi[0] = chars[j % charsLen]
-		bufi[1] = chars[(j / charsLen) % charsLen]
-		bufi[2] = chars[(j / charsLen / charsLen) % charsLen]
-		bufi[3] = chars[(j / charsLen / charsLen / charsLen) % charsLen]
+	for j1 := 0; j1 < charsLen; j1++ {
+		bufi[0] = chars[j1]
+		for j2 := 0; j2 < charsLen; j2++ {
+			bufi[1] = chars[j2]
+			for j3 := 0; j3 < charsLen; j3++ {
+				bufi[2] = chars[j3]
+				for j4 := 0; j4 < charsLen; j4++ {
+					bufi[3] = chars[j4]
 
-		t.h.Reset()
-		t.h.Write(bufi)
-		base64.StdEncoding.Encode(bufo, t.h.Sum(nil))
-		if strings.HasPrefix(string(bufo), prefix) {
-			fmt.Printf("\rFOUND!!!: #%s -> %s\n", string(bufi), strings.TrimRight(string(bufo), "\x00"))
+					t.h.Reset()
+					t.h.Write(bufi)
+					base64.StdEncoding.Encode(bufo, t.h.Sum(nil))
+					if strings.HasPrefix(string(bufo), prefix) {
+						fmt.Printf("\rFOUND!!!: #%s -> %s\n", string(bufi), strings.TrimRight(string(bufo), "\x00"))
+					}
+
+					t.Count++
+				}
+			}
 		}
-
-		t.Count++
 	}
 	return nil
 }
