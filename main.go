@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"encoding/base64"
 	"flag"
@@ -88,6 +89,7 @@ func newTripper(d *dealer, i int) *tripper {
 func (t *tripper) Go(prefix string) error {
 	var bufi []byte
 	var bufo []byte = make([]byte, charsLen*2)
+	prefixb := []byte(prefix)
 
 	for i := 0; ; i++ {
 		bufi = t.d.NextBlock(t.i)
@@ -103,7 +105,7 @@ func (t *tripper) Go(prefix string) error {
 						t.h.Reset()
 						t.h.Write(bufi)
 						base64.StdEncoding.Encode(bufo, t.h.Sum(nil))
-						if strings.HasPrefix(string(bufo), prefix) {
+						if bytes.HasPrefix(bufo, prefixb) {
 							fmt.Printf("\rFOUND!!!: #%s -> %s\n", string(bufi), strings.TrimRight(string(bufo), "\x00"))
 						}
 
@@ -117,6 +119,7 @@ func (t *tripper) Go(prefix string) error {
 
 func (t *tripper) GoOne(prefix string) error {
 	var bufo = make([]byte, charsLen*2)
+	prefixb := []byte(prefix)
 
 	bufi := t.d.NextBlock(t.i)
 	for j1 := 0; j1 < charsLen; j1++ {
@@ -131,7 +134,7 @@ func (t *tripper) GoOne(prefix string) error {
 					t.h.Reset()
 					t.h.Write(bufi)
 					base64.StdEncoding.Encode(bufo, t.h.Sum(nil))
-					if strings.HasPrefix(string(bufo), prefix) {
+					if bytes.HasPrefix(bufo, prefixb) {
 						fmt.Printf("\rFOUND!!!: #%s -> %s\n", string(bufi), strings.TrimRight(string(bufo), "\x00"))
 					}
 
