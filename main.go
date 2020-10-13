@@ -121,7 +121,7 @@ func (t *tripper) Go(prefix string) error {
 						if bytes.HasPrefix(t.h.Sum(nil), expect) {
 							base64.StdEncoding.Encode(bufo, t.h.Sum(nil))
 							if bytes.HasPrefix(bufo, prefixb) {
-								fmt.Printf("\rFOUND!!!: #%s -> %s\n", string(bufi), strings.TrimRight(string(bufo), "\x00"))
+								fmt.Printf("\nFOUND!!!: #%s -> %s\n", string(bufi), strings.TrimRight(string(bufo), "\x00"))
 							}
 						}
 
@@ -166,7 +166,7 @@ func (t *tripper) GoOne(prefix string) error {
 					if bytes.HasPrefix(t.h.Sum(nil), expect) {
 						base64.StdEncoding.Encode(bufo, t.h.Sum(nil))
 						if bytes.HasPrefix(bufo, prefixb) {
-							fmt.Printf("\rFOUND!!!: #%s -> %s\n", string(bufi), strings.TrimRight(string(bufo), "\x00"))
+							fmt.Printf("\nFOUND!!!: #%s -> %s\n", string(bufi), strings.TrimRight(string(bufo), "\x00"))
 						}
 					}
 
@@ -201,6 +201,8 @@ func main() {
 		})
 	}
 
+	start := time.Now()
+
 	go func() {
 		var count uint64
 		var lastCount uint64
@@ -210,7 +212,7 @@ func main() {
 			for i := 0; i < *n; i++ {
 				count += ts[i].Count
 			}
-			fmt.Printf("Hashes: %d (%d hash/s)", count, count-lastCount)
+			fmt.Printf("Hashes: %d (%d hash/s) | Elapsed %d sec", count, count-lastCount, time.Now().Sub(start) / time.Second)
 			time.Sleep(time.Second)
 			fmt.Print("\r")
 		}
