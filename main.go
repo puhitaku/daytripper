@@ -121,7 +121,7 @@ func (t *tripper) Go(prefix string) error {
 						if bytes.HasPrefix(t.h.Sum(nil), expect) {
 							base64.StdEncoding.Encode(bufo, t.h.Sum(nil))
 							if bytes.HasPrefix(bufo, prefixb) {
-								fmt.Printf("\rFOUND!!!: #%s -> %s\n", string(bufi), strings.TrimRight(string(t.h.Sum(nil)), "\x00"))
+								fmt.Printf("\rFOUND!!!: #%s -> %s\n", string(bufi), strings.TrimRight(string(bufo), "\x00"))
 							}
 						}
 
@@ -166,7 +166,7 @@ func (t *tripper) GoOne(prefix string) error {
 					if bytes.HasPrefix(t.h.Sum(nil), expect) {
 						base64.StdEncoding.Encode(bufo, t.h.Sum(nil))
 						if bytes.HasPrefix(bufo, prefixb) {
-							fmt.Printf("\rFOUND!!!: #%s -> %s\n", string(bufi), strings.TrimRight(string(t.h.Sum(nil)), "\x00"))
+							fmt.Printf("\rFOUND!!!: #%s -> %s\n", string(bufi), strings.TrimRight(string(bufo), "\x00"))
 						}
 					}
 
