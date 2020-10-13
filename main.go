@@ -17,6 +17,7 @@ import (
 const (
 	tripLength = 20
 	charsLen = 65
+	blockSize uint64 = charsLen*charsLen*charsLen*charsLen
 )
 
 var chars []byte = []byte("0123456789abcdefghijklmnopqrstuvwxyz!@#$%^&*()_+|[];',./{}:\"<>?`~")
@@ -38,7 +39,7 @@ func newDealer(n int) *dealer {
 	}
 }
 
-func (d *dealer) Next(rn int) []byte {
+func (d *dealer) NextBlock(rn int) []byte {
 	posc := d.incrAndCopy()
 	for i := 0; i < tripLength; i++ {
 		d.buf[rn][i] = chars[posc[i]]
@@ -49,9 +50,9 @@ func (d *dealer) Next(rn int) []byte {
 func (d *dealer) incrAndCopy() []uint8 {
 	d.lock.Lock()
 	defer d.lock.Unlock()
-	copied := d.pos[:]
+	copied := append([]byte{}, d.pos...)
 
-	for i := 0; i < tripLength+1; i++ {
+	for i := 4; i < tripLength+1; i++ {
 		if i == tripLength {
 			panic("limit exceeded!")
 		}
@@ -72,6 +73,8 @@ type tripper struct {
 	i int
 	h hash.Hash
 	d *dealer
+
+	Count uint64
 }
 
 func newTripper(d *dealer, i int) *tripper {
@@ -87,21 +90,48 @@ func (t *tripper) Go(prefix string) error {
 	var bufo []byte = make([]byte, charsLen*2)
 
 	for i := 0; ; i++ {
-		bufi = t.d.Next(t.i)
-		t.h.Reset()
-		t.h.Write(bufi)
-		base64.StdEncoding.Encode(bufo, t.h.Sum(nil))
-		if i != 0 && i % 100 == 0 {
-			fmt.Print()
-		}
-		if strings.HasPrefix(string(bufo), prefix) {
-			fmt.Printf("\rFOUND!!!: #%s -> %s\n", string(bufi), strings.TrimRight(string(bufo), "\x00"))
+		bufi = t.d.NextBlock(t.i)
+		for j := 0; j < int(blockSize); j++ {
+			bufi[0] = chars[j % charsLen]
+			bufi[1] = chars[(j / charsLen) % charsLen]
+			bufi[2] = chars[(j / charsLen / charsLen) % charsLen]
+			bufi[3] = chars[(j / charsLen / charsLen / charsLen) % charsLen]
+			t.h.Reset()
+			t.h.Write(bufi)
+			base64.StdEncoding.Encode(bufo, t.h.Sum(nil))
+			if strings.HasPrefix(string(bufo), prefix) {
+				fmt.Printf("\rFOUND!!!: #%s -> %s\n", string(bufi), strings.TrimRight(string(bufo), "\x00"))
+			}
+
+			t.Count++
 		}
 	}
 }
 
+func (t *tripper) GoOne(prefix string) error {
+	var bufo = make([]byte, charsLen*2)
+
+	bufi := t.d.NextBlock(t.i)
+	for j := 0; j < int(blockSize); j++ {
+		bufi[0] = chars[j % charsLen]
+		bufi[1] = chars[(j / charsLen) % charsLen]
+		bufi[2] = chars[(j / charsLen / charsLen) % charsLen]
+		bufi[3] = chars[(j / charsLen / charsLen / charsLen) % charsLen]
+
+		t.h.Reset()
+		t.h.Write(bufi)
+		base64.StdEncoding.Encode(bufo, t.h.Sum(nil))
+		if strings.HasPrefix(string(bufo), prefix) {
+			fmt.Printf("\rFOUND!!!: #%s -> %s\n", string(bufi), strings.TrimRight(string(bufo), "\x00"))
+		}
+
+		t.Count++
+	}
+	return nil
+}
+
 func main() {
-	n := flag.Int("nroutines", runtime.NumCPU(), "Number of goroutines (default: runtime.NumCPU())")
+	n := flag.Int("nr", runtime.NumCPU(), "Number of goroutines (default: runtime.NumCPU())")
 	flag.Parse()
 	if flag.NArg() != 1 {
 		fmt.Println("Invalid number of args!")
@@ -128,7 +158,10 @@ func main() {
 		var lastCount uint64
 		for {
 			lastCount = count
-			count = d.Count
+			count = 0
+			for i := 0; i < *n; i++ {
+				count += ts[i].Count
+			}
 			fmt.Printf("Hashes: %d (%d hash/s)", count, count-lastCount)
 			time.Sleep(time.Second)
 			fmt.Print("\r")
