@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	tripLength = 20
+	tripLength = 16
 	charsLen = 65
 	blockSize uint64 = charsLen*charsLen*charsLen*charsLen
 )
@@ -90,6 +90,7 @@ func (t *tripper) Go(prefix string) error {
 	var bufi []byte
 	var bufo []byte = make([]byte, charsLen*2)
 	prefixb := []byte(prefix)
+	lp := len(prefix)
 
 	for i := 0; ; i++ {
 		bufi = t.d.NextBlock(t.i)
@@ -104,7 +105,7 @@ func (t *tripper) Go(prefix string) error {
 
 						t.h.Reset()
 						t.h.Write(bufi)
-						base64.StdEncoding.Encode(bufo, t.h.Sum(nil))
+						base64.StdEncoding.Encode(bufo, t.h.Sum(nil)[:lp])
 						if bytes.HasPrefix(bufo, prefixb) {
 							fmt.Printf("\rFOUND!!!: #%s -> %s\n", string(bufi), strings.TrimRight(string(bufo), "\x00"))
 						}
@@ -120,6 +121,7 @@ func (t *tripper) Go(prefix string) error {
 func (t *tripper) GoOne(prefix string) error {
 	var bufo = make([]byte, charsLen*2)
 	prefixb := []byte(prefix)
+	lp := len(prefix)
 
 	bufi := t.d.NextBlock(t.i)
 	for j1 := 0; j1 < charsLen; j1++ {
@@ -133,7 +135,7 @@ func (t *tripper) GoOne(prefix string) error {
 
 					t.h.Reset()
 					t.h.Write(bufi)
-					base64.StdEncoding.Encode(bufo, t.h.Sum(nil))
+					base64.StdEncoding.Encode(bufo, t.h.Sum(nil)[:lp])
 					if bytes.HasPrefix(bufo, prefixb) {
 						fmt.Printf("\rFOUND!!!: #%s -> %s\n", string(bufi), strings.TrimRight(string(bufo), "\x00"))
 					}
