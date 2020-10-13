@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-type Dealer interface {
+type dealer interface {
 	Run()
 	NextBlock() []byte
 	Found(string)
@@ -91,13 +91,6 @@ func (d *dealerServer) incrAndCopy() []int8 {
 
 func (d *dealerServer) Found(trip string) {
 	found(trip, "myself")
-}
-
-func found(trip, by string) {
-	sha := sha1.New()
-	sha.Write([]byte(trip))
-	s := base64.StdEncoding.EncodeToString(sha.Sum(nil))
-	fmt.Printf("\nFOUND!!!: #%s -> %s (by %s)\n", trip, s, by)
 }
 
 type dealerClient struct {
@@ -185,4 +178,11 @@ func (d *dealerClient) Found(trip string) {
 	if res.StatusCode != http.StatusOK {
 		fmt.Printf("\nClient: remote server returned non-200 response for the found request: %d\n", res.StatusCode)
 	}
+}
+
+func found(trip, by string) {
+	sha := sha1.New()
+	sha.Write([]byte(trip))
+	s := base64.StdEncoding.EncodeToString(sha.Sum(nil))
+	fmt.Printf("\nFOUND!!!: #%s -> %s (by %s)\n", trip, s, by)
 }
