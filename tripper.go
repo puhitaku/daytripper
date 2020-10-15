@@ -10,21 +10,30 @@ import (
 	"strings"
 )
 
+type tripperConfig struct {
+	Prefix string
+	Once bool
+}
+
 type tripper struct {
 	h hash.Hash
 	d dealer
+	conf tripperConfig
 
 	Count uint64
 }
 
-func newTripper(d dealer) *tripper {
+func newTripper(d dealer, conf tripperConfig) *tripper {
 	return &tripper{
 		h: sha1.New(),
 		d: d,
+		conf: conf,
 	}
 }
 
-func (t *tripper) Go(prefix string, once bool) error {
+func (t *tripper) Go() error {
+	prefix := t.conf.Prefix
+
 	if len(prefix) < 5 {
 		return fmt.Errorf("too short")
 	}
@@ -44,7 +53,7 @@ func (t *tripper) Go(prefix string, once bool) error {
 	prefixb := []byte(prefix)
 
 	iLimit := uint64(math.MaxUint64)
-	if once {
+	if t.conf.Once {
 		iLimit = 1
 	}
 

@@ -48,9 +48,9 @@ func main() {
 
 	for i := 0; i < *nr; i++ {
 		j := i
-		ts[j] = newTripper(d)
+		ts[j] = newTripper(d, tripperConfig{Prefix: prefix})
 		eg.Go(func() error {
-			return ts[j].Go(prefix, false)
+			return ts[j].Go()
 		})
 	}
 
