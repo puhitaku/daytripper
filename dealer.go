@@ -21,15 +21,21 @@ type dealer interface {
 type dealerServer struct {
 	pos []int8
 	lock sync.Mutex
+	standalone bool
 }
 
-func newDealerServer() *dealerServer {
+func newDealerServer(standalone bool) *dealerServer {
 	return &dealerServer{
 		pos: make([]int8, tripLength),
+		standalone: standalone,
 	}
 }
 
 func (d *dealerServer) Run() {
+	if d.standalone {
+		return
+	}
+
 	http.HandleFunc("/pos", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		pos := d.incrAndCopy()

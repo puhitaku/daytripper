@@ -22,6 +22,7 @@ func main() {
 
 	nr := flag.Int("nr", runtime.NumCPU() * 2, "Number of goroutines (default: runtime.NumCPU() * 2)")
 	remote := flag.String("remote", "", "Remote daytripper host (optional for distributed calculation)")
+	standalone := flag.Bool("s", false, "Standalone mode (runs without server)")
 
 	flag.Parse()
 
@@ -36,7 +37,7 @@ func main() {
 	var d dealer
 
 	if *remote == "" {
-		d = newDealerServer()
+		d = newDealerServer(*standalone)
 	} else {
 		d = newDealerClient(*remote)
 	}
